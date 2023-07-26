@@ -17,7 +17,30 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   return res.status(status).json(error.message);
 });
 
-app.listen(configs.PORT, () => {
-  mongoose.connect(configs.DB_URL);
-  console.log(`Server has started on PORT ${configs.PORT} 🥸`);
-});
+const dbConnect = async () => {
+  let dbCon = false;
+
+  while (!dbCon) {
+    try {
+      console.log('Connecting to database');
+      await mongoose.connect(configs.DB_URL);
+      dbCon = true
+    } catch (e) {
+      console.log('Database unavailable, wait 3 seconds');
+      await new Promise(resolve => setTimeout(resolve, 3000))
+    }
+  }
+}
+
+const start = async () => {
+  try {
+    await dbConnect();
+    await app.listen(configs.PORT, () => {
+      console.log(`Server has started on PORT ${configs.PORT} 🥸`);
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+start()
